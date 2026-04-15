@@ -1,5 +1,5 @@
 from fastapi import Query, Body, APIRouter
-from pydantic import BaseModel
+from schemas.hotels import Hotel, HotelPATCH
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -12,7 +12,7 @@ hotels = [
 ]
 
 
-@router.get("")
+@router.get("", summary="Получение списка отелей", description="Получение списка отелей с возможностью фильтрации по id и названию")
 def get_hotels(
     id: int | None = Query(None, description="id отеля"),
     title: str | None = Query(None, description="Название отеля"),
@@ -28,15 +28,27 @@ def get_hotels(
 
 
 
-class Hotel(BaseModel):
-    title: str
-    name: str
 
 
-
-
-@router.post("")
-def create_hotel(hotel_data: Hotel):
+@router.post("", summary="Создание отеля", description="Создание отеля. id генерируется автоматически, его не нужно передавать в теле запроса")
+def create_hotel(hotel_data: Hotel = Body(openapi_examples={
+    "example1": {
+        "summary": "Пример 1",
+        "description": "Пример с названием отеля Sochi",
+        "value": {
+            "title": "Sochi",
+            "name": "сочи отель у моря",
+        },
+        },
+        "example2": {
+            "summary": "Пример 2",
+            "description": "Пример с названием отеля Krim",
+            "value": {
+                "title": "Krim",
+                "name": "крим отель у моря",
+            },
+        }
+    },)):
     global hotels
     hotels.append({
         "id": hotels[-1]["id"] + 1, 
@@ -46,7 +58,7 @@ def create_hotel(hotel_data: Hotel):
     return {"Status": "OK"}
 
 
-@router.put("/{hotel_id}")
+@router.put("/{hotel_id}", summary="Полное обновление данных об отеле", description="Тут мы полностью обновляем данные об отеле")
 def put_hotel(hotel_id: int, hotel_data: Hotel):
     global hotels
     for hotel in hotels:
@@ -64,20 +76,19 @@ def put_hotel(hotel_id: int, hotel_data: Hotel):
 )
 def patch_hotel(
     hotel_id: int,
-    title: str | None = Body(default=None),
-    name: str | None = Body(default=None),
+    hotel_data: HotelPATCH,
 ):
     global hotels
     for hotel in hotels:
         if hotel["id"] == hotel_id:
-            if title is not None:
-                hotel["title"] = title
-            if name is not None:
-                hotel["name"] = name
+            if hotel_data.title is not None:
+                hotel["title"] = hotel_data.title
+            if hotel_data.name is not None:
+                hotel["name"] = hotel_data.name
             return {"status": "ok", "hotel": hotel}
 
 
-@router.delete("/{hotel_id}")
+@router.delete("/{hotel_id}", summary="Удаление отеля", description="Тут мы удаляем отель по его id")
 def delete_hotel(hotel_id: int):
     global hotels
     hotels = [hotel for hotel in hotels if hotel["id"] != hotel_id]
