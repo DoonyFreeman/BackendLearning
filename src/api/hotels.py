@@ -2,20 +2,12 @@ from fastapi import Query, Body, APIRouter
 from src.schemas.hotels import Hotel, HotelPATCH
 from src.api.dependencies import PaginationDep
 from typing import Annotated
-from src.database import async_session_maker
+from src.database import async_session_maker, engine
 from src.models import HotelsOrm
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
-
-
-hotels = [
-    {"id": 1, "title": "Sochi", "name": "soci"},
-    {"id": 2, "title": "Krim", "name": "krim"},
-    {"id": 3, "title": "Anapa", "name": "anapa"},
-    {"id": 4, "title": "Surgut", "name": "surgut"},
-]
 
 
 @router.get(
@@ -23,24 +15,24 @@ hotels = [
     summary="Получение списка отелей",
     description="Получение списка отелей с возможностью фильтрации по id и названию",
 )
-def get_hotels(
+async def get_hotels(
     pagination: PaginationDep,  # прокидываем в зависимости от PaginationParams для получения параметров пагинации
     id: int | None = Query(None, description="id отеля"),
     title: str | None = Query(None, description="Название отеля"),
 ):
-    hotels_ = []
-    for hotel in hotels:
-        if id and hotel["id"] != id:
-            continue
-        if title and hotel["title"] != title:
-            continue
-        hotels_.append(hotel)
-    if pagination.page and pagination.per_page:
-        return hotels_[pagination.per_page * (pagination.page - 1) :][
-            : pagination.per_page
-        ]
-    else:
-        return hotels_
+   
+
+   async with async_session_maker() as session:
+        query = select(HotelsOrm)
+        result = await session.execute(query)
+        print(type(result), result)
+        hotels = result.scalars().all()
+        return hotels
+    # if pagination.page and pagination.per_page:
+    #     return hotels_[pagination.per_page * (pagination.page - 1) :][
+    #         : pagination.per_page
+    #     ]
+    # else:
 
 
 @router.post(
@@ -70,7 +62,7 @@ async def create_hotel(
 ):
     async with async_session_maker() as session:
         add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump())
-
+        print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds": True}))
         await session.execute(add_hotel_stmt)
         await session.commit()
     return {"Status": "OK"}
