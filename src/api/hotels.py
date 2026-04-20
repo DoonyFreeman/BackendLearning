@@ -1,5 +1,5 @@
 from fastapi import Query, Body, APIRouter
-from src.schemas.hotels import Hotel, HotelPATCH
+from src.schemas.hotels import Hotel, HotelPATCH, HotelAdd
 from src.api.dependencies import PaginationDep
 from typing import Annotated
 from src.database import async_session_maker, engine
@@ -43,7 +43,7 @@ async def get_hotel(hotel_id: int):
     description="Создание отеля. id генерируется автоматически, его не нужно передавать в теле запроса",
 )
 async def create_hotel(
-    hotel_data: Hotel = Body(
+    hotel_data: HotelAdd = Body(
         openapi_examples={
             "example1": {
                 "summary": "Пример 1",
@@ -73,7 +73,7 @@ async def create_hotel(
     summary="Полное обновление данных об отеле",
     description="Тут мы полностью обновляем данные об отеле",
 )
-async def put_hotel(hotel_id: int, hotel_data: Hotel):
+async def put_hotel(hotel_id: int, hotel_data: HotelAdd):
     async with async_session_maker() as session:
         await HotelsRepository(session).edit(hotel_data, id=hotel_id)
         await session.commit()
