@@ -1,4 +1,4 @@
-from repositories.base import BaseRepository
+from src.repositories.base import BaseRepository
 from src.models import RoomsOrm
 from src.schemas.users import User
 

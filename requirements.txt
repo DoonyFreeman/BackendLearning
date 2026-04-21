@@ -9,6 +9,7 @@ appnope==0.1.4
 asttokens==3.0.1
 asyncpg==0.31.0
 attrs==26.1.0
+bcrypt==4.1.2
 black==26.3.1
 certifi==2026.2.25
 click==8.3.2
@@ -46,6 +47,7 @@ mypy_extensions==1.1.0
 nest-asyncio==1.6.0
 packaging==26.0
 parso==0.8.6
+passlib==1.7.4
 pathspec==1.0.4
 pexpect==4.9.0
 platformdirs==4.9.6
@@ -59,6 +61,7 @@ pydantic-extra-types==2.11.2
 pydantic-settings==2.13.1
 pydantic_core==2.41.5
 Pygments==2.20.0
+PyJWT==2.12.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.2.2
 python-multipart==0.0.26

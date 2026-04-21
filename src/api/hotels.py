@@ -5,7 +5,7 @@ from typing import Annotated
 from src.database import async_session_maker, engine
 from src.models import HotelsOrm
 from sqlalchemy import insert, select, func
-from repositories.hotels import HotelsRepository
+from src.repositories.hotels import HotelsRepository
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
