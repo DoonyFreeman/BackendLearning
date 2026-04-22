@@ -14,8 +14,10 @@ from src.api.hotels import router as router_hotels
 
 app = FastAPI(docs_url=None)
 
-app.include_router(router_hotels)
+
 app.include_router(router_auth)
+app.include_router(router_hotels)
+
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
