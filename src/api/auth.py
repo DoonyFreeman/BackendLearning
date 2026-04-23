@@ -1,13 +1,14 @@
-from fastapi import APIRouter, HTTPException, Response, Request
+from fastapi import APIRouter, HTTPException, Response
+import jwt
+from datetime import datetime, timedelta, timezone
 
 from src.repositories.users import UsersRepository
 from src.database import async_session_maker
 from src.schemas.users import UserRequestAdd, UserAdd
-from passlib.context import CryptContext
-import jwt
-from datetime import datetime, timedelta, timezone
+
 from src.config import settings
 from src.services.auth import AuthService
+from src.api.dependencies import UserIdDep
 
 router = APIRouter(prefix="/auth", tags=["Авторизация аутентификация"])
 
@@ -59,13 +60,10 @@ async def login_user(
     
 
 
-@router.get("/only_auth")
-async def only_auth(
-    request: Request
+@router.get("/me")
+async def get_me(
+    user_id: UserIdDep,
 ):
-    access_token = request.cookies.get("access_token", None)
-    data = AuthService().decode_token(access_token)
-    user_id = data.get("user_id", None)
     async with async_session_maker() as session:
         user = await UsersRepository(session).get_one_or_none(id=user_id)
         return user
