@@ -105,3 +105,4 @@ async def delete_hotel(hotel_id: int):
         await HotelsRepository(session).delete(id=hotel_id)
         await session.commit()
     return {"status": "ok"}
+

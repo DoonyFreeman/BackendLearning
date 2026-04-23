@@ -1,8 +1,8 @@
-"""add Unique for Email
+"""add rooms
 
-Revision ID: 045f92239e9e
+Revision ID: 3e378545ba79
 Revises: e064058f89cf
-Create Date: 2026-04-21 22:52:06.943826
+Create Date: 2026-04-21 22:50:42.403292
 
 """
 
@@ -12,7 +12,7 @@ from alembic import op
 import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
-revision: str = "045f92239e9e"
+revision: str = "3e378545ba79"
 down_revision: Union[str, Sequence[str], None] = "e064058f89cf"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
