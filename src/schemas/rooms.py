@@ -14,7 +14,7 @@ class RoomAddRequest(BaseModel):
 class RoomAdd(BaseModel):
     title: str
     hotel_id: int
-    description: str | None
+    description: str | None = None
     price: int
     quantity: int
 
