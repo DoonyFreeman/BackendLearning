@@ -6,6 +6,7 @@ from src.database import async_session_maker, engine
 from src.models import HotelsOrm
 from sqlalchemy import insert, select, func
 from src.repositories.hotels import HotelsRepository
+from src.api.dependencies import DBDep
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -17,12 +18,12 @@ router = APIRouter(prefix="/hotels", tags=["Отели"])
 )
 async def get_hotels(
     pagination: PaginationDep,  # прокидываем в зависимости от PaginationParams для получения параметров пагинации
-    db: DBDep
+    db: DBDep,
     location: str | None = Query(None, description="Локация"),
     title: str | None = Query(None, description="Название отеля"),
 ):
    per_page = pagination.per_page or 5
-   return await HotelsRepository(session).get_all(
+   return await db.hotels.get_all(
        location = location,
        title = title,
        limit=per_page,
