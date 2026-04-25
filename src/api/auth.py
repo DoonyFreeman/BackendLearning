@@ -9,7 +9,7 @@ from src.schemas.users import UserRequestAdd, UserAdd
 from src.config import settings
 from src.services.auth import AuthService
 from src.api.dependencies import UserIdDep
-
+from src.api.dependencies import DBDep
 router = APIRouter(prefix="/auth", tags=["Авторизация аутентификация"])
 
 
@@ -29,12 +29,13 @@ def create_access_token(data: dict) -> str:
 @router.post("/register")
 async def register_user(
     data: UserRequestAdd,
+    db: DBDep
+
 ):
     hashed_password = AuthService().hash_password(data.password)
     new_user_data = UserAdd(email=data.email, hashed_password=hashed_password)
-    async with async_session_maker() as session:
-        await UsersRepository(session).add(new_user_data)
-        await session.commit()
+    await db.users.add(new_user_data)
+    await db.commit()
 
     return {"status": "OK"}
 
@@ -42,12 +43,13 @@ async def register_user(
 @router.post("/login")
 async def login_user(
     data: UserRequestAdd,
-    response: Response
+    response: Response,
+    db: DBDep
 ):
     
 
-    async with async_session_maker() as session:
-        user = await UsersRepository(session).get_user_with_hashed_password(email=data.email)
+
+        user = await db.users.get_user_with_hashed_password(email=data.email)
         if not user:
             raise HTTPException(status_code=401, detail="Пользователь с таким email не найден")
         
@@ -63,10 +65,10 @@ async def login_user(
 @router.get("/me")
 async def get_me(
     user_id: UserIdDep,
+    db: DBDep
 ):
-    async with async_session_maker() as session:
-        user = await UsersRepository(session).get_one_or_none(id=user_id)
-        return user
+    user = await db.users.get_one_or_none(id=user_id)
+    return user
 
 
 @router.get("/logout")
