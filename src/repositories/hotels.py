@@ -6,37 +6,21 @@ from datetime import date
 from src.models import RoomsOrm, BookingsOrm
 from src.database import engine
 
+
 class HotelsRepository(BaseRepository):
     model = HotelsOrm
     schema = Hotel
 
-    async def get_all(
-        self,
-        location: str | None = None,
-        title: str | None = None,
-        limit: int | None = None,
-        offset: int | None = None
-    ) -> list[Hotel]:
-        query = select(HotelsOrm)
-        if location: 
-            query = query.filter(func.lower(HotelsOrm.location).contains(location.strip().lower()))
-        if title: 
-            query = query.filter(func.lower(HotelsOrm.title).contains(title.strip().lower()))
-        query = (
-            query
-            .limit(limit)
-            .offset(offset)
-        )
 
-        result = await self.session.execute(query)
-        return [Hotel.model_validate(hotel, from_attributes=True) for hotel in result.scalars().all()]
- 
- 
     async def get_filtered_by_time(
             self,
             date_from: date,
-            date_to: date
-    ):
+            date_to: date,
+            location: str | None = None,
+            title: str | None = None,
+            limit: int | None = None,
+            offset: int | None = None
+    ) -> list[Hotel]:
         rooms_count = ( 
             select(BookingsOrm.room_id, func.count("*").label("rooms_booked"))
             .select_from(BookingsOrm)
@@ -59,17 +43,26 @@ class HotelsRepository(BaseRepository):
             .cte(name="rooms_left_table")
         )
         
-        available_rooms = (
+        available_hotels = (
             select(rooms_left_table.c.hotel_id)
             .select_from(rooms_left_table)
             .filter(rooms_left_table.c.rooms_left > 0)
             .group_by(rooms_left_table.c.hotel_id)
+            .cte(name="available_hotels")
         )
         
         query = (
             select(HotelsOrm)
-            .filter(HotelsOrm.id.in_(available_rooms))
+            .filter(HotelsOrm.id.in_(select(available_hotels.c.hotel_id)))
         )
+        
+        if location:
+            query = query.filter(func.lower(HotelsOrm.location).contains(location.strip().lower()))
+        if title:
+            query = query.filter(func.lower(HotelsOrm.title).contains(title.strip().lower()))
+        
+        query = query.limit(limit).offset(offset)
+        
         print(query.compile(bind=engine, compile_kwargs={"literal_binds": True}))
         
         result = await self.session.execute(query)
