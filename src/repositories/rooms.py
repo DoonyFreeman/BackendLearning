@@ -11,7 +11,7 @@ class RoomsRepository(BaseRepository):
     schema = Room
 
 
-    def get_filtered_by_time(
+    async def get_filtered_by_time(
             self, 
             hotel_id: int,
             date_from: date,
@@ -21,10 +21,10 @@ class RoomsRepository(BaseRepository):
             select(BookingsOrm.room_id, func.count("*").label("rooms_booked"))
             .select_from(BookingsOrm)
             .filter(
-                BookingsOrm.date_from >= date_from,
-                BookingsOrm.date_to <= date_to
+                BookingsOrm.date_from <= date_to,
+                BookingsOrm.date_to >= date_from
             ).group_by(BookingsOrm.room_id)
-            .cte("rooms_count")
+            .cte(name="rooms_count")
         )
 
 
@@ -32,11 +32,12 @@ class RoomsRepository(BaseRepository):
         rooms_left_table = (
             select(
                 RoomsOrm.id.label("room_id"), 
-                RoomsOrm.quantity - func.coalesce(rooms_count.c.rooms_booked, 0).label("rooms_left"),
+                (RoomsOrm.quantity - func.coalesce(rooms_count.c.rooms_booked, 0)).label("rooms_left"),
             )
             .select_from(RoomsOrm)
             .outerjoin(rooms_count, RoomsOrm.id == rooms_count.c.room_id)
-            .cte("rooms_left_table")
+            .filter(RoomsOrm.hotel_id == hotel_id)
+            .cte(name="rooms_left_table")
         )
 
 
@@ -46,3 +47,6 @@ class RoomsRepository(BaseRepository):
             .filter(rooms_left_table.c.rooms_left > 0)
         )
         print(query.compile(bind=engine, compile_kwargs={"literal_binds": True}))
+        
+        result = await self.session.execute(query)
+        return [self.schema.model_validate(room, from_attributes=True) for room in result.scalars().all()]
