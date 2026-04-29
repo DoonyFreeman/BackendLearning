@@ -1,6 +1,6 @@
 class DataMapper:
     db_model = None
-    chema = None
+    schema = None
 
     @classmethod    
     def map_to_domain_entity(cls, data):
