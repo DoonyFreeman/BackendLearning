@@ -7,7 +7,7 @@ class RoomAddRequest(BaseModel):
     description: str | None
     price: int
     quantity: int
-    facilities_ids: list[int] | None = None
+    facilities_ids: list[int] = []
 
 
 
@@ -32,6 +32,7 @@ class RoomPatchRequest(BaseModel):
     description: str | None = None
     price: int | None = None
     quantity: int | None = None
+    facilities_ids: list[int] = []
 
 class RoomPatch(BaseModel):
     hotel_id: int | None = None
