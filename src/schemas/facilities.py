@@ -17,5 +17,5 @@ class RoomFacilityAdd(BaseModel):
     facility_id: int
 
 class RoomFacility(RoomFacilityAdd):
-    id
+    id: int
 

@@ -1,14 +1,14 @@
 from src.repositories.base import BaseRepository
-from src.models import RoomsOrm
-from src.schemas.rooms import Room
+from src.models.rooms import RoomsOrm
+from src.schemas.rooms import RoomWithRels
 from datetime import date
-from sqlalchemy import select, func
-from src.models import BookingsOrm
-from src.database import engine
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
+from src.repositories.utils import rooms_ids_for_booking
 
 class RoomsRepository(BaseRepository):
     model = RoomsOrm
-    schema = Room
+    schema = RoomWithRels
 
 
     async def get_filtered_by_time(
@@ -17,36 +17,20 @@ class RoomsRepository(BaseRepository):
             date_from: date,
             date_to: date
     ):  
-        rooms_count = ( 
-            select(BookingsOrm.room_id, func.count("*").label("rooms_booked"))
-            .select_from(BookingsOrm)
-            .filter(
-                BookingsOrm.date_from <= date_to,
-                BookingsOrm.date_to >= date_from
-            ).group_by(BookingsOrm.room_id)
-            .cte(name="rooms_count")
-        )
-
-
-
-        rooms_left_table = (
-            select(
-                RoomsOrm.id.label("room_id"), 
-                (RoomsOrm.quantity - func.coalesce(rooms_count.c.rooms_booked, 0)).label("rooms_left"),
-            )
-            .select_from(RoomsOrm)
-            .outerjoin(rooms_count, RoomsOrm.id == rooms_count.c.room_id)
-            .filter(RoomsOrm.hotel_id == hotel_id)
-            .cte(name="rooms_left_table")
-        )
-
-
-        query = (
-            select(rooms_left_table)
-            .select_from(rooms_left_table)
-            .filter(rooms_left_table.c.rooms_left > 0)
-        )
-        print(query.compile(bind=engine, compile_kwargs={"literal_binds": True}))
+        rooms_ids_to_get = rooms_ids_for_booking(hotel_id, date_from, date_to)
         
+        query = (
+            select(self.model)
+            .options(selectinload(self.model.facilities))
+            .filter(RoomsOrm.id.in_(rooms_ids_to_get))
+        )
         result = await self.session.execute(query)
-        return [self.schema.model_validate(room, from_attributes=True) for room in result.scalars().all()]
+        return [RoomWithRels.model_validate(model) for model in result.unique().scalars().all()]
+    
+    async def get_one_or_none_with(
+            self,
+            hotel_id: int,
+            room_id: int
+    ):
+        
+        
