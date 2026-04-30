@@ -10,7 +10,7 @@ from src.repositories.mappers.mappers import RoomDataMapper, RoomDataWithRelsMap
 
 class RoomsRepository(BaseRepository):
     model = RoomsOrm
-    schema = RoomDataMapper
+    mapper = RoomDataMapper
 
 
 

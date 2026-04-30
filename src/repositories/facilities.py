@@ -14,7 +14,7 @@ class FacilitiesRepository(BaseRepository):
 
 class RoomsFacilitiesRepository(BaseRepository):
     model = RoomsFacilitiesOrm
-    schema = RoomFacility
+    mapper = FacilityDataMapper
 
     async def set_room_facilities(self, room_id: int, facilities_ids: list[int]):
         get_current_facilities_ids_query = (
