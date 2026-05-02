@@ -1,4 +1,4 @@
-from repositories.mappers.base import DataMapper
+from src.repositories.mappers.base import DataMapper
 from src.models.hotels import HotelsOrm
 from src.schemas.hotels import Hotel
 from src.models.rooms import RoomsOrm 
