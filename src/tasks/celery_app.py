@@ -18,4 +18,3 @@ celery_instance.conf.beat_schedule = {
         "schedule": 86400.0,  # Раз в сутки (24 часа), а не 5 секунд
     }
 }
-}
