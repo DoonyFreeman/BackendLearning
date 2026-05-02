@@ -36,7 +36,7 @@ async def run_send_email_regulary():
             await send_emails_bookings_today_checkin()
         except Exception as e:
             print(f"Ошибка в периодической задаче: {e}")
-        await asyncio.sleep(1500)
+        await asyncio.sleep(15)
         
 
 
