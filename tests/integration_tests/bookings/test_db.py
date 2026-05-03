@@ -1,7 +1,8 @@
+from datetime import date
+
 from src.database import async_session_maker_null_pool
 from src.schemas.bookings import BookingAdd
-from src.utils.db_manager import DBManager
-from datetime import date
+
 
 async def test_add_booking(db):
     user_id = (await db.users.get_all())[0].id
