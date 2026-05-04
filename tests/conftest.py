@@ -1,6 +1,10 @@
 import pytest
 from httpx import AsyncClient
 import json
+from unittest import mock
+
+# нужно для того чтобы не было ошибки с кэшем
+mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f).start()
 
 from src.config import settings
 from src.main import app
