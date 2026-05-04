@@ -7,6 +7,7 @@ import asyncio
 
 from src.config import settings
 
+
 engine = create_async_engine(settings.DB_URL)
 engine_null_pool = create_async_engine(settings.DB_URL, poolclass=NullPool)
 
