@@ -1,3 +1,5 @@
+# ruff: noqa: E402
+
 import pytest
 from httpx import AsyncClient
 import json
@@ -9,7 +11,7 @@ mock.patch("fastapi_cache.decorator.cache", lambda *args, **kwargs: lambda f: f)
 from src.config import settings
 from src.main import app
 from src.database import Base, engine_null_pool, async_session_maker_null_pool
-from src.models import *
+from src.models import *    # noqa
 from src.schemas.hotels import HotelAdd
 from src.schemas.rooms import RoomAdd
 from src.utils.db_manager import DBManager

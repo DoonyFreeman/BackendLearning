@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Body, Query
+from fastapi import APIRouter, Body
 from fastapi_cache.decorator import cache
 
 from src.api.dependencies import DBDep

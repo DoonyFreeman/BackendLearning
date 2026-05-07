@@ -1,4 +1,4 @@
-from fastapi import Query, Body, APIRouter
+from fastapi import APIRouter
 from src.api.dependencies import DBDep, UserIdDep
 from src.schemas.bookings import BookingAddRequest, BookingAdd
 

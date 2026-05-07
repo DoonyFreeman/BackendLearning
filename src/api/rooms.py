@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Body, Query
-from src.database import async_session_maker
-from src.repositories.rooms import RoomsRepository
+from datetime import date
+
+
 from src.schemas.rooms import RoomAdd, RoomAddRequest, RoomPatchRequest, RoomPatch
 from src.schemas.facilities import RoomFacilityAdd
 from src.api.dependencies import DBDep
-from datetime import date
 router = APIRouter(prefix="/hotels", tags=["Номера"])
 
 @router.get("/{hotel_id}/rooms")

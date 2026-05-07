@@ -1,6 +1,11 @@
+import typing
+
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, ForeignKey
 from src.database import Base
+
+if typing.TYPE_CHECKING:
+    from src.models.rooms import RoomsOrm
 
 
 # реализуем many 2 many связь

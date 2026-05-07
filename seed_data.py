@@ -4,7 +4,7 @@ Seed script to populate database with test data for 2026 year
 import asyncio
 from datetime import date
 
-from src.database import async_session_maker, engine, Base
+from src.database import async_session_maker
 from src.models.hotels import HotelsOrm
 from src.models.rooms import RoomsOrm
 from src.models.bookings import BookingsOrm

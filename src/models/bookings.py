@@ -2,7 +2,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from datetime import date
 from src.database import Base
 from sqlalchemy.orm import Mapped, mapped_column
-from sqlalchemy import String, Integer,ForeignKey
+from sqlalchemy import ForeignKey
 
 
 class BookingsOrm(Base):

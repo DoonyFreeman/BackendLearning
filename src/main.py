@@ -5,7 +5,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 import uvicorn
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-from fastapi_cache.decorator import cache
+from fastapi_cache.decorator import cache # noqa
 
 import sys
 from pathlib import Path

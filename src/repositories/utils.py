@@ -4,8 +4,7 @@ from src.models import RoomsOrm
 from datetime import date
 from sqlalchemy import select, func
 from src.models import BookingsOrm
-from src.database import engine
-from datetime import date
+
 
 
 def rooms_ids_for_booking(
@@ -45,10 +44,7 @@ def rooms_ids_for_booking(
     if hotel_id is not None:
         rooms_ids_for_hotel = rooms_ids_for_hotel.filter_by(hotel_id=hotel_id)
 
-    rooms_id_for_hotel=(
-        rooms_ids_for_hotel
-        .subquery(name="rooms_ids_for_hotel")
-    )
+  
 
 
     rooms_ids_to_get = (

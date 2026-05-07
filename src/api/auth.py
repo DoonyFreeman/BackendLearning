@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException, Response
 import jwt
 from datetime import datetime, timedelta, timezone
 
-from src.repositories.users import UsersRepository
-from src.database import async_session_maker
+
+
 from src.schemas.users import UserRequestAdd, UserAdd
 
 from src.config import settings

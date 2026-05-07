@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from pydantic import ConfigDict
 
 from src.schemas.facilities import Facility

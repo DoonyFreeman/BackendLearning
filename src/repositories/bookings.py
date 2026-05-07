@@ -4,7 +4,7 @@ from fastapi import HTTPException
 
 from src.repositories.base import BaseRepository
 from src.models import BookingsOrm
-from src.schemas.bookings import Booking, BookingAdd
+from src.schemas.bookings import BookingAdd
 from src.repositories.mappers.mappers import BookingDataMapper
 from src.repositories.utils import rooms_ids_for_booking
 

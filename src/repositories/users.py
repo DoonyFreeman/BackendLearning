@@ -3,7 +3,7 @@ from pydantic import EmailStr
 
 from src.repositories.base import BaseRepository
 from src.models.users import UsersOrm
-from src.schemas.users import User, UserWithHashedPassword
+from src.schemas.users import UserWithHashedPassword
 from src.repositories.mappers.mappers import UserDataMapper
 
 class UsersRepository(BaseRepository):

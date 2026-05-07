@@ -4,7 +4,7 @@ from src.models import HotelsOrm
 from src.schemas.hotels import Hotel
 from datetime import date
 from src.models import RoomsOrm, BookingsOrm
-from src.database import engine
+
 from src.repositories.mappers.mappers import HotelDataMapper
 
 class HotelsRepository(BaseRepository):
@@ -63,7 +63,6 @@ class HotelsRepository(BaseRepository):
         
         query = query.limit(limit).offset(offset)
         
-        print(query.compile(bind=engine, compile_kwargs={"literal_binds": True}))
         
         result = await self.session.execute(query)
         return [self.mapper.map_to_domain_entity(hotel) for hotel in result.scalars().all()]

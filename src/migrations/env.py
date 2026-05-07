@@ -5,7 +5,7 @@ from sqlalchemy import pool
 
 from alembic import context
 from src.database import Base
-from src.models import *
+from src.models import *        # noqa
 from src.config import settings
 
 
