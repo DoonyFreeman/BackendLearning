@@ -5,7 +5,7 @@ from fastapi.openapi.docs import get_swagger_ui_html
 import uvicorn
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-from fastapi_cache.decorator import cache # noqa
+from fastapi_cache.decorator import cache  # noqa
 
 import sys
 from pathlib import Path
@@ -23,6 +23,7 @@ from src.api.images import router as router_images
 from src.init import redis_manager
 from src.config import settings
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await redis_manager.connect()
@@ -33,7 +34,6 @@ async def lifespan(app: FastAPI):
 
 if settings.MODE == "TEST":
     FastAPICache.init(RedisBackend(redis_manager.redis), prefix="fastapi-cache")
-    
 
 
 app = FastAPI(docs_url=None, lifespan=lifespan)
@@ -45,6 +45,7 @@ app.include_router(router_rooms)
 app.include_router(router_facilities)
 app.include_router(router_bookings)
 app.include_router(router_images)
+
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():

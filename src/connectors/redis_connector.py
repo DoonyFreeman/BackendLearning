@@ -26,6 +26,7 @@ class RedisManager:
         if self.redis:
             await self.redis.close()
 
+
 # Пример использования:
 # redis_manager = RedisManager(redis_url="redis://localhost")
 # await redis_manager.connect()

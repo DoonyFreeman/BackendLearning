@@ -7,42 +7,41 @@ from src.models import RoomsOrm, BookingsOrm
 
 from src.repositories.mappers.mappers import HotelDataMapper
 
+
 class HotelsRepository(BaseRepository):
     model = HotelsOrm
     mapper = HotelDataMapper
 
-
     async def get_filtered_by_time(
-            self,
-            date_from: date,
-            date_to: date,
-            location: str | None = None,
-            title: str | None = None,
-            limit: int | None = None,
-            offset: int | None = None
+        self,
+        date_from: date,
+        date_to: date,
+        location: str | None = None,
+        title: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> list[Hotel]:
-        rooms_count = ( 
+        rooms_count = (
             select(BookingsOrm.room_id, func.count("*").label("rooms_booked"))
             .select_from(BookingsOrm)
-            .filter(
-                BookingsOrm.date_from <= date_to,
-                BookingsOrm.date_to >= date_from
-            ).group_by(BookingsOrm.room_id)
+            .filter(BookingsOrm.date_from <= date_to, BookingsOrm.date_to >= date_from)
+            .group_by(BookingsOrm.room_id)
             .cte(name="rooms_count")
         )
 
-
         rooms_left_table = (
             select(
-                RoomsOrm.id.label("room_id"), 
+                RoomsOrm.id.label("room_id"),
                 RoomsOrm.hotel_id.label("hotel_id"),
-                (RoomsOrm.quantity - func.coalesce(rooms_count.c.rooms_booked, 0)).label("rooms_left"),
+                (RoomsOrm.quantity - func.coalesce(rooms_count.c.rooms_booked, 0)).label(
+                    "rooms_left"
+                ),
             )
             .select_from(RoomsOrm)
             .outerjoin(rooms_count, RoomsOrm.id == rooms_count.c.room_id)
             .cte(name="rooms_left_table")
         )
-        
+
         available_hotels = (
             select(rooms_left_table.c.hotel_id)
             .select_from(rooms_left_table)
@@ -50,19 +49,15 @@ class HotelsRepository(BaseRepository):
             .group_by(rooms_left_table.c.hotel_id)
             .cte(name="available_hotels")
         )
-        
-        query = (
-            select(HotelsOrm)
-            .filter(HotelsOrm.id.in_(select(available_hotels.c.hotel_id)))
-        )
-        
+
+        query = select(HotelsOrm).filter(HotelsOrm.id.in_(select(available_hotels.c.hotel_id)))
+
         if location:
             query = query.filter(func.lower(HotelsOrm.location).contains(location.strip().lower()))
         if title:
             query = query.filter(func.lower(HotelsOrm.title).contains(title.strip().lower()))
-        
+
         query = query.limit(limit).offset(offset)
-        
-        
+
         result = await self.session.execute(query)
         return [self.mapper.map_to_domain_entity(hotel) for hotel in result.scalars().all()]

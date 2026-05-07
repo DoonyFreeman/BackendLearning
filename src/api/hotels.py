@@ -3,6 +3,7 @@ from src.schemas.hotels import HotelPATCH, HotelAdd
 from src.api.dependencies import PaginationDep, DBDep
 from datetime import date
 from fastapi_cache.decorator import cache
+
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
 
@@ -20,24 +21,24 @@ async def get_hotels(
     date_from: date | None = Query(examples=["2026-06-01"], description="Дата заселения"),
     date_to: date | None = Query(examples=["2026-07-02"], description="Дата выселения"),
 ):
-   per_page = pagination.per_page or 5
+    per_page = pagination.per_page or 5
 
-   return await db.hotels.get_filtered_by_time(
-       
+    return await db.hotels.get_filtered_by_time(
         date_from=date_from,
         date_to=date_to,
-        location = location,
-        title = title,
+        location=location,
+        title=title,
         limit=per_page,
-        offset=per_page * (pagination.page - 1) if pagination.page and pagination.per_page else 0
+        offset=per_page * (pagination.page - 1) if pagination.page and pagination.per_page else 0,
     )
+
+
 #    return await db.hotels.get_all(
 #        location = location,
 #        title = title,
 #        limit=per_page,
 #        offset=per_page * (pagination.page - 1) if pagination.page and pagination.per_page else 0
 #     )
-
 
 
 @router.get("/{hotel_id}")
@@ -76,6 +77,7 @@ async def create_hotel(
 
     return {"status": "OK", "hotel": hotel}
 
+
 @router.put(
     "/{hotel_id}",
     summary="Полное обновление данных об отеле",
@@ -85,7 +87,6 @@ async def put_hotel(hotel_id: int, hotel_data: HotelAdd, db: DBDep):
     hotel = await db.hotels.edit(hotel_data, id=hotel_id)
     await db.commit()
     return {"status": "OK", "hotel": hotel}
-
 
 
 @router.patch(
@@ -112,4 +113,3 @@ async def delete_hotel(hotel_id: int, db: DBDep):
     await db.hotels.delete(id=hotel_id)
     await db.commit()
     return {"status": "ok"}
-

@@ -17,8 +17,9 @@ class FacilitiesOrm(Base):
 
     rooms: Mapped[list["RoomsOrm"]] = relationship(
         back_populates="facilities",
-        secondary = "rooms_facilities",
+        secondary="rooms_facilities",
     )
+
 
 class RoomsFacilitiesOrm(Base):
     __tablename__ = "rooms_facilities"

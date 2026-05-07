@@ -12,32 +12,26 @@ class RoomsRepository(BaseRepository):
     model = RoomsOrm
     mapper = RoomDataMapper
 
-
-
-    async def get_filtered_by_time(
-            self, 
-            hotel_id: int,
-            date_from: date,
-            date_to: date
-    ):  
+    async def get_filtered_by_time(self, hotel_id: int, date_from: date, date_to: date):
         rooms_ids_to_get = rooms_ids_for_booking(hotel_id, date_from, date_to)
-        
+
         query = (
             select(self.model)
             .options(selectinload(self.model.facilities))
             .filter(RoomsOrm.id.in_(rooms_ids_to_get))
         )
         result = await self.session.execute(query)
-        return [RoomDataWithRelsMapper.map_to_domain_entity(model) for model in result.unique().scalars().all()]
-    
+        return [
+            RoomDataWithRelsMapper.map_to_domain_entity(model)
+            for model in result.unique().scalars().all()
+        ]
+
     async def get_one_or_none_with_rels(
-            self,
-            **filter_by,
+        self,
+        **filter_by,
     ):
         query = (
-            select(self.model)
-            .options(selectinload(self.model.facilities))
-            .filter_by(**filter_by)
+            select(self.model).options(selectinload(self.model.facilities)).filter_by(**filter_by)
         )
         result = await self.session.execute(query)
 
@@ -45,5 +39,3 @@ class RoomsRepository(BaseRepository):
         if model is None:
             return None
         return RoomDataWithRelsMapper.map_to_domain_entity(model)
-        
-        

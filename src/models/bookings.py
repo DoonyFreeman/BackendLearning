@@ -19,4 +19,3 @@ class BookingsOrm(Base):
     def total_cost(self) -> int:
         days = (self.date_to - self.date_from).days
         return days * self.price
-    
