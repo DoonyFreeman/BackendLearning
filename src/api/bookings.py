@@ -1,6 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from src.api.dependencies import DBDep, UserIdDep
 from src.schemas.bookings import BookingAddRequest, BookingAdd
+from src.schemas.rooms import Room
+from src.schemas.hotels import Hotel
+
+from src.exceptions import ObjectNotFoundException
 
 router = APIRouter(prefix="/bookings", tags=["Бронирования"])
 
@@ -18,12 +22,13 @@ async def get_user_bookings(user_id: UserIdDep, db: DBDep):
 
 @router.post("")
 async def add_booking(user_id: UserIdDep, db: DBDep, booking_data: BookingAddRequest):
-    room = await db.rooms.get_one_or_none(id=booking_data.room_id)
-    if room is None:
-        raise HTTPException(status_code=404, detail="Комната не найдена")
-    hotel = await db.hotels.get_one_or_none(id=room.hotel_id)  # type: ignore
-    if hotel is None:
-        raise HTTPException(status_code=404, detail="Отель не найден")
+    try:
+        room: Room = await db.rooms.get_one(id=booking_data.room_id)
+    except ObjectNotFoundException:
+        raise HTTPException(status_code=400, detail="Номер не найден")
+    
+    hotel: Hotel = await db.hotels.get_one(id=room.hotel_id)  # type: ignore
+    
     room_price: int = room.price  # type: ignore
     _booking_data = BookingAdd(
         user_id=user_id,
