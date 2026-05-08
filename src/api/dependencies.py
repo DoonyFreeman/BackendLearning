@@ -26,7 +26,10 @@ def get_token(request: Request) -> str:
 
 def get_current_user_id(token: str = Depends(get_token)) -> int:
     data = AuthService().decode_token(token)
-    return data.get("user_id", None)
+    user_id = data.get("user_id")
+    if not isinstance(user_id, int):
+        raise HTTPException(status_code=401, detail="Неверный токен")
+    return user_id
 
 
 UserIdDep = Annotated[int, Depends(get_current_user_id)]

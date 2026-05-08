@@ -1,27 +1,30 @@
 from sqlalchemy import select, insert, delete, update
 from pydantic import BaseModel
+from typing import Sequence, Any
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.database import Base
 from src.repositories.mappers.base import DataMapper
 
 
 class BaseRepository:
-    model = None
-    mapper: DataMapper = None
+    model: type[Base]
+    mapper: type[DataMapper]
+    session: AsyncSession
 
-    def __init__(self, session):
+    def __init__(self, session):  # type: ignore
         self.session = session
 
-    async def get_filtered(self, *filter, **filter_by):
-
+    async def get_filtered(self, *filter, **filter_by) -> list[BaseModel | Any]:
         query = select(self.model).filter(*filter).filter_by(**filter_by)
         result = await self.session.execute(query)
         return [self.mapper.map_to_domain_entity(model) for model in result.scalars().all()]
 
-    async def get_all(self, *args, **kwargs):
+    async def get_all(self, *args, **kwargs) -> list[BaseModel | Any]:
         return await self.get_filtered()
 
-    async def get_one_or_none(self, **filter_by):
-
+    async def get_one_or_none(self, **filter_by) -> BaseModel | None | Any:
         query = select(self.model).filter_by(**filter_by)
         result = await self.session.execute(query)
 
@@ -30,17 +33,17 @@ class BaseRepository:
             return None
         return self.mapper.map_to_domain_entity(model)
 
-    async def add(self, data: BaseModel):
+    async def add(self, data: BaseModel) -> BaseModel | Any:
         add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
         result = await self.session.execute(add_data_stmt)
         model = result.scalars().one()
         return self.mapper.map_to_domain_entity(model)
 
-    async def add_bulk(self, data: list[BaseModel]):
+    async def add_bulk(self, data: Sequence[BaseModel]):
         add_data_stmt = insert(self.model).values([item.model_dump() for item in data])
         await self.session.execute(add_data_stmt)
 
-    async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by):
+    async def edit(self, data: BaseModel, exclude_unset: bool = False, **filter_by) -> None:
         update_stmt = (
             update(self.model)
             .filter_by(**filter_by)
@@ -48,6 +51,6 @@ class BaseRepository:
         )
         await self.session.execute(update_stmt)
 
-    async def delete(self, **filter_by):
+    async def delete(self, **filter_by) -> None:
         delete_stmt = delete(self.model).filter_by(**filter_by)
         await self.session.execute(delete_stmt)

@@ -16,9 +16,9 @@ class RoomsRepository(BaseRepository):
         rooms_ids_to_get = rooms_ids_for_booking(hotel_id, date_from, date_to)
 
         query = (
-            select(self.model)
-            .options(selectinload(self.model.facilities))
-            .filter(RoomsOrm.id.in_(rooms_ids_to_get))
+            select(self.model)  # type: ignore
+            .options(selectinload(self.model.facilities))  # type: ignore
+            .filter(RoomsOrm.id.in_(rooms_ids_to_get))  # type: ignore
         )
         result = await self.session.execute(query)
         return [
@@ -31,7 +31,7 @@ class RoomsRepository(BaseRepository):
         **filter_by,
     ):
         query = (
-            select(self.model).options(selectinload(self.model.facilities)).filter_by(**filter_by)
+            select(self.model).options(selectinload(self.model.facilities)).filter_by(**filter_by)  # type: ignore
         )
         result = await self.session.execute(query)
 

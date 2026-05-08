@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Body, Query
 from datetime import date
 
-
 from src.schemas.rooms import RoomAdd, RoomAddRequest, RoomPatchRequest, RoomPatch
 from src.schemas.facilities import RoomFacilityAdd
-from src.api.dependencies import DBDep
+from src.api.dependencies import DBDep  # noqa: F401
 
 router = APIRouter(prefix="/hotels", tags=["Номера"])
 
@@ -54,7 +53,7 @@ async def create_room(
     room = await db.rooms.add(_room_data)
 
     rooms_facilities_data = [
-        RoomFacilityAdd(room_id=room.id, facility_id=f_id) for f_id in room_data.facilities_ids
+        RoomFacilityAdd(room_id=room.id, facility_id=f_id) for f_id in room_data.facilities_ids  # type: ignore
     ]
     await db.rooms_facilities.add_bulk(rooms_facilities_data)
     await db.commit()
