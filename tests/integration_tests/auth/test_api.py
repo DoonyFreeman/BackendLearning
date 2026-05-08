@@ -2,7 +2,7 @@ import pytest
 
 @pytest.mark.parametrize("email, password, status_code", [
     ("k0t@pes.com", "1234", 200),
-    ("k0t@pes.com", "1234", 400),
+    ("k0t@pes.com", "1234", 409),
     ("kt@pes.com", "3234", 200),
     ("abcsd", "3234", 422),
 ])

@@ -10,6 +10,8 @@ from src.services.auth import AuthService
 from src.api.dependencies import UserIdDep
 from src.api.dependencies import DBDep
 
+from src.exceptions import ObjectAlreadyExistsException
+
 router = APIRouter(prefix="/auth", tags=["Авторизация аутентификация"])
 
 
@@ -23,13 +25,13 @@ def create_access_token(data: dict) -> str:
 
 @router.post("/register")
 async def register_user(data: UserRequestAdd, db: DBDep):
+    hashed_password = AuthService().hash_password(data.password)
+    new_user_data = UserAdd(email=data.email, hashed_password=hashed_password)
     try:
-        hashed_password = AuthService().hash_password(data.password)
-        new_user_data = UserAdd(email=data.email, hashed_password=hashed_password)
         await db.users.add(new_user_data)
         await db.commit()
-    except:
-        raise HTTPException(status_code=400)
+    except ObjectAlreadyExistsException:
+        raise HTTPException(status_code=409, detail="Пользователь с такой почтой уже существует")
     return {"status": "OK"}
 
 

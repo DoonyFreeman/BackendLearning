@@ -16,7 +16,3 @@ class DataMapper:
     @classmethod
     def map_to_domain_entity(cls, data: Base | dict | Row | RowMapping) -> SchemaType:  # type: ignore
         return cls.schema.model_validate(data, from_attributes=True)  # type: ignore
-
-    @classmethod
-    def map_to_persistence_entity(cls, data: BaseModel) -> Base:  # type: ignore
-        return cls.db_model(**data.model_dump())

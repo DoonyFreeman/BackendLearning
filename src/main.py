@@ -3,9 +3,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.openapi.docs import get_swagger_ui_html
 import uvicorn
+
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-from fastapi_cache.decorator import cache  # noqa
 
 import sys
 from pathlib import Path
@@ -21,7 +21,6 @@ from src.api.facilities import router as router_facilities
 from src.api.images import router as router_images
 
 from src.init import redis_manager
-from src.config import settings
 
 
 @asynccontextmanager
@@ -47,13 +46,13 @@ app.include_router(router_images)
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
-        return get_swagger_ui_html(
-            openapi_url=app.openapi_url,  # type: ignore
-            title=app.title + " - Swagger UI",  # type: ignore
-            oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,  # type: ignore
-            swagger_js_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js",  # type: ignore
-            swagger_css_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",  # type: ignore
-        )
+    return get_swagger_ui_html(
+        openapi_url=app.openapi_url,  # type: ignore
+        title=app.title + " - Swagger UI",  # type: ignore
+        oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,  # type: ignore
+        swagger_js_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js",
+        swagger_css_url="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css",
+    )
 
 
 if __name__ == "__main__":
