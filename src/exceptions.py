@@ -7,3 +7,7 @@ class NabronirovaliException(Exception):
 
 class ObjectNotFoundException(NabronirovaliException):
     detail = "Объект не найден"
+
+
+class AllRoomsAreBookedException(NabronirovaliException):
+    detail = "Не осталось свободных номеров"

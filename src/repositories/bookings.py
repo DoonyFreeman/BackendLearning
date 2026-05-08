@@ -8,6 +8,8 @@ from src.schemas.bookings import BookingAdd
 from src.repositories.mappers.mappers import BookingDataMapper
 from src.repositories.utils import rooms_ids_for_booking
 
+from src.exceptions import AllRoomsAreBookedException
+
 
 class BookingsRepository(BaseRepository):
     model = BookingsOrm
@@ -30,5 +32,5 @@ class BookingsRepository(BaseRepository):
         if data.room_id in rooms_ids_to_book:
             new_booking = await self.add(data)
             return new_booking
-        else:
-            raise HTTPException(500)
+        
+        raise AllRoomsAreBookedException
