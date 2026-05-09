@@ -5,6 +5,7 @@ import pytest
     ("k0t@pes.com", "1234", 409),
     ("kt@pes.com", "3234", 200),
     ("abcsd", "3234", 422),
+    ("dfsdfsd", "3234", 422),
 ])
 async def test_auth_flow(email: str, password: str, status_code: int, ac):
 
