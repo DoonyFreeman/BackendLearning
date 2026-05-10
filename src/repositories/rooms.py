@@ -6,6 +6,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from src.repositories.utils import rooms_ids_for_booking
 from src.repositories.mappers.mappers import RoomDataMapper, RoomDataWithRelsMapper
+from src.exceptions import ObjectNotFoundException, RoomNotFoundException
+from sqlalchemy.exc import NoResultFound
 
 
 class RoomsRepository(BaseRepository):
@@ -26,7 +28,7 @@ class RoomsRepository(BaseRepository):
             for model in result.unique().scalars().all()
         ]
 
-    async def get_one_or_none_with_rels(
+    async def get_one_with_rels(
         self,
         **filter_by,
     ):
@@ -34,8 +36,8 @@ class RoomsRepository(BaseRepository):
             select(self.model).options(selectinload(self.model.facilities)).filter_by(**filter_by)  # type: ignore
         )
         result = await self.session.execute(query)
-
-        model = result.scalars().one_or_none()
-        if model is None:
-            return None
+        try:
+            model = result.scalar_one()
+        except NoResultFound:
+            raise RoomNotFoundException
         return RoomDataWithRelsMapper.map_to_domain_entity(model)
