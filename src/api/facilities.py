@@ -3,7 +3,7 @@ from fastapi_cache.decorator import cache
 
 from src.api.dependencies import DBDep
 from src.schemas.facilities import FacilityAdd
-from src.tasks.tasks import test_task  # noqa: F401
+from src.tasks.tasks import test_task
 from src.services.facilities import FacilityService
 
 
@@ -11,10 +11,9 @@ router = APIRouter(prefix="/facilities", tags=["Удобства"])
 
 
 @router.get("")
-@cache(expire=60)
+@cache(expire=10)
 async def get_facilities(db: DBDep):
-    print("Иду в базу данных")
-    return await db.facilities.get_all()
+    return await FacilityService(db).get_facilities()
 
 
 @router.post("")

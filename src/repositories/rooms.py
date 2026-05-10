@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from src.repositories.utils import rooms_ids_for_booking
 from src.repositories.mappers.mappers import RoomDataMapper, RoomDataWithRelsMapper
-from src.exceptions import ObjectNotFoundException, RoomNotFoundException
+from src.exceptions import RoomNotFoundException
 from sqlalchemy.exc import NoResultFound
 
 

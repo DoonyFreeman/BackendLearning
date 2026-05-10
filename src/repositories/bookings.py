@@ -1,6 +1,5 @@
 from datetime import date
 from sqlalchemy import select
-from fastapi import HTTPException
 
 from src.repositories.base import BaseRepository
 from src.models import BookingsOrm

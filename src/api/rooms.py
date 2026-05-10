@@ -1,11 +1,11 @@
-from fastapi import APIRouter, Body, Query, HTTPException
 from datetime import date
 
+from fastapi import APIRouter, Body, Query
 
-from src.schemas.rooms import RoomAdd, RoomAddRequest, RoomPatchRequest, RoomPatch
-from src.schemas.facilities import RoomFacilityAdd
-from src.api.dependencies import DBDep  # noqa: F401
-from src.exceptions import check_date_to_after_date_from, ObjectNotFoundException, RoomNotFoundHTTPException, HotelNotFoundHTTPException, RoomNotFoundException, HotelNotFoundException
+from src.api.dependencies import DBDep
+from src.exceptions import HotelNotFoundHTTPException, \
+    RoomNotFoundHTTPException, RoomNotFoundException, HotelNotFoundException
+from src.schemas.rooms import RoomAddRequest, RoomPatchRequest
 from src.services.rooms import RoomService
 router = APIRouter(prefix="/hotels", tags=["Номера"])
 
@@ -59,7 +59,7 @@ async def create_room(
 @router.get("/{hotel_id}/rooms/{room_id}")
 async def get_room(hotel_id: int, room_id: int, db: DBDep):
     try:
-        return await db.rooms.get_one_or_none_with_rels(id=room_id, hotel_id=hotel_id)    
+        return await RoomService(db).get_room(hotel_id, room_id)
     except RoomNotFoundException:
         raise RoomNotFoundHTTPException
 
