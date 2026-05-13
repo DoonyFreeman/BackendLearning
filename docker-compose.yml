@@ -1,0 +1,80 @@
+services:
+  booking_db:
+    container_name: booking_db
+    image: postgres:16
+    ports:
+      - "6432:5432"
+    environment:
+      POSTGRES_USER: abcde
+      POSTGRES_PASSWORD: abcde
+      POSTGRES_DB: booking
+    volumes:
+      - pg-booking-data:/var/lib/postgresql/data
+    networks:
+      - my-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U abcde -d booking"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  booking_cache:
+    container_name: booking_cache
+    image: redis:7.4
+    ports:
+      - "7379:6379"
+    networks:
+      - my-network
+
+  booking_back_service:
+    container_name: 'booking_back'
+    build:
+      context: .
+    ports:
+      - "7777:8000"
+    networks:
+      - my-network
+    env_file:
+      - .env
+    depends_on:
+      booking_db:
+        condition: service_healthy
+      booking_cache:
+        condition: service_started
+
+  booking_celery_worker_service:
+    container_name: 'booking_celery_worker'
+    build:
+      context: .
+    networks:
+      - my-network
+    env_file:
+      - .env
+    command:  "celery --app=src.tasks.celery_app:celery_instance worker -l INFO"
+    depends_on:
+      booking_db:
+        condition: service_healthy
+      booking_cache:
+        condition: service_started
+
+  booking_celery_beat_service:
+    container_name: 'booking_celery_beat'
+    build:
+      context: .
+    networks:
+      - my-network
+    env_file:
+      - .env
+    command: "celery --app=src.tasks.celery_app:celery_instance beat -l INFO"
+    depends_on:
+      booking_db:
+        condition: service_healthy
+      booking_cache:
+        condition: service_started
+
+
+volumes:
+  pg-booking-data:
+
+networks:
+  my-network:
