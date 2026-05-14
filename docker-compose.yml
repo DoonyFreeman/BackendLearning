@@ -72,6 +72,18 @@ services:
       booking_cache:
         condition: service_started
 
+  booking_nginx:
+    container_name: booking_nginx
+    image: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    networks:
+      - my-network
+    depends_on:
+      - booking_back_service
+
 
 volumes:
   pg-booking-data:
