@@ -1,267 +1,177 @@
-# Hotel Booking System (BackendLearning)
+# Booking API
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.136.1-009688)](https://fastapi.tiangolo.com/)
-[![Python](https://img.shields.io/badge/Python-3.11.9-3776AB)](https://www.python.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-14+-336791)](https://www.postgresql.org/)
-[![Redis](https://img.shields.io/badge/Redis-7.4.0-DC382D)](https://redis.io/)
-[![Celery](https://img.shields.io/badge/Celery-5.6.3-37814A)](https://docs.celeryproject.org/)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB)](https://www.python.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-336791)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7.4-DC382D)](https://redis.io/)
+[![Celery](https://img.shields.io/badge/Celery-5.6-37814A)](https://docs.celeryproject.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)](https://www.docker.com/)
 
-## Обзор
+Асинхронный REST API для бронирования отелей. FastAPI + SQLAlchemy 2.0 + Celery + Docker Compose.
 
-Проект представляет собой учебный (пет-проект) бэкенд системы бронирования отелей, разработанный на асинхронном фреймворке FastAPI. Демонстрирует современный стек Python для создания REST API, работы с базами данных, кэширования и фоновых задач.
+## Tech Stack
 
-Основные возможности:
-- Регистрация и аутентификация пользователей (JWT)
-- Полный CRUD для отелей, номеров, бронирований
-- Фильтрация отелей и номеров по датам доступности
-- Кэширование ответов через Redis
-- Фоновая обработка задач (изменение размера изображений, уведомления о заезде) с помощью Celery
-- Асинхронная работа с PostgreSQL через SQLAlchemy и asyncpg
-- Миграции базы данных через Alembic
-- Автоматическая документация API (Swagger UI)
+| Технология | Проблема | Решение |
+|-----------|----------|---------|
+| **FastAPI** | Синхронный REST фреймворк блокирует I/O | Async endpoints через `async/await`, автодокументация OpenAPI/Swagger |
+| **SQLAlchemy 2.0 + asyncpg** | ORM блокирует event loop | Асинхронный движок + пул соединений, typed ORM-запросы |
+| **Alembic** | Ручное управление схемой БД | Версионирование миграций, авто-генерация из моделей |
+| **Pydantic V2** | Валидация на каждом слое вручную | Схемы RequestAdd → Add → Response с разделением ответственности |
+| **Celery + Redis** | Тяжёлые операции (resize image, email) в request-response | Асинхронная очередь задач + периодический Celery Beat |
+| **fastapi-cache2 + Redis** | Повторные одинаковые запросы к БД | Кэш с TTL 10с для горячих эндпоинтов (отели, удобства) |
+| **JWT + bcrypt** | Хранение сессий на сервере | Stateless auth через HTTP-only cookie, Hash паролей с солью |
+| **Repository Pattern + DataMapper** | SQLAlchemy протекает в бизнес-логику | Изоляция ORM: API → Service → Repository → DB, Mapper конвертирует ORM → Pydantic |
+| **Nginx (rate limiting)** | Нет защиты от брутфорса | 10 запросов/сек на IP через `limit_req_zone` |
+| **Pillow** | Клиентские изображения разного размера | Ресайз 3 варианта (200/500/1000px) в фоне через `BackgroundTasks` |
+| **Docker Compose** | Ручной запуск 6 сервисов | Одна команда — Postgres, Redis, API, Celery Worker, Celery Beat, Nginx |
 
-## Стек технологий
+## Quick Start
 
-### Основные зависимости (requirements.txt)
-| Технология | Версия | Назначение |
-|-----------|--------|------------|
-| FastAPI | 0.136.1 | Веб-фреймворк для создания REST API |
-| Uvicorn | 0.46.0 | ASGI-сервер для запуска приложения |
-| SQLAlchemy | 2.0.49 | Асинхронный ORM для работы с базой данных |
-| asyncpg | 0.31.0 | Асинхронный драйвер PostgreSQL |
-| psycopg2-binary | 2.9.12 | Адаптер PostgreSQL |
-| Alembic | 1.18.4 | Инструмент для миграций базы данных |
-| Pydantic | 2.13.3 | Валидация данных и сериализация |
-| pydantic-settings | 2.14.0 | Управление настройками приложения |
-| Redis | 7.4.0 | Кэширование и брокер сообщений Celery |
-| Celery | 5.6.3 | Фоновые задачи |
-| fastapi-cache2 | 0.2.2 | Кэширование ответов API |
-| PyJWT | 2.9.0 | Работа с JWT-токенами |
-| python-jose | 3.5.0 | Кодирование/декодирование JWT |
-| passlib | 1.7.4 | Хэширование паролей (bcrypt) |
-| bcrypt | 4.0.1 | Шифрование паролей |
-| Pillow | 12.2.0 | Обработка изображений |
-| python-dotenv | 1.2.2 | Загрузка переменных окружения |
+### 1. Скопируй `.env.example` в `.env`
 
-### Инфраструктура
-- Python 3.11.9
-- PostgreSQL 14+
-- Redis 7.4.0
-
-## Структура проекта
-
-```
-BackendLearning/
-├── .env                  # Переменные окружения
-├── .gitignore            # Исключения для Git
-├── .python-version       # Версия Python
-├── alembic.ini           # Конфигурация Alembic
-├── requirements.txt      # Зависимости проекта
-├── seed_data.py          # Скрипт заполнения БД тестовыми данными
-├── _course_helpers/      # Вспомогательные файлы курса
-│   └── fastapi_load_test.py
-└── src/                  # Исходный код
-    ├── main.py           # Точка входа в приложение FastAPI
-    ├── config.py         # Настройки приложения (pydantic-settings)
-    ├── database.py       # Настройка асинхронного подключения к БД
-    ├── init.py           # Инициализация Redis
-    ├── api/              # Обработчики маршрутов API
-    │   ├── auth.py       # Аутентификация
-    │   ├── hotels.py     # Отели
-    │   ├── rooms.py      # Номера
-    │   ├── bookings.py   # Бронирования
-    │   ├── facilities.py # Удобства
-    │   ├── images.py     # Загрузка изображений
-    │   └── dependencies.py # Зависимости FastAPI (DI)
-    ├── models/           # Модели SQLAlchemy ORM
-    │   ├── hotels.py
-    │   ├── rooms.py
-    │   ├── bookings.py
-    │   ├── users.py
-    │   └── facilities.py
-    ├── repositories/     # Слой доступа к данным
-    │   ├── base.py       # Базовый класс репозитория
-    │   ├── hotels.py
-    │   ├── rooms.py
-    │   ├── bookings.py
-    │   ├── users.py
-    │   ├── facilities.py
-    │   └── mappers/      # Преобразование ORM <-> Схемы
-    ├── schemas/          # Pydantic-схемы (валидация данных)
-    │   ├── hotels.py
-    │   ├── rooms.py
-    │   ├── bookings.py
-    │   ├── users.py
-    │   └── facilities.py
-    ├── services/         # Бизнес-логика
-    │   └── auth.py       # Сервис аутентификации
-    ├── tasks/            # Фоновые задачи Celery
-    │   ├── celery_app.py # Конфигурация Celery
-    │   └── tasks.py      # Определения задач
-    ├── connectors/       # Коннекторы внешних сервисов
-    │   └── redis_connector.py
-    ├── utils/            # Вспомогательные функции
-    │   └── db_manager.py
-    ├── migrations/       # Миграции Alembic
-    │   └── versions/     # Файлы миграций
-    └── static/           # Статические файлы (изображения)
-        └── images/
-```
-
-## Предварительные требования
-
-- Python 3.11+
-- PostgreSQL (настроенная база данных)
-- Redis (запущенный сервер)
-- Установленный менеджер пакетов pip
-
-## Установка и настройка
-
-1. Клонируйте репозиторий:
 ```bash
-git clone <url-репозитория>
-cd BackendLearning
+cp .env.example .env
+# Для Docker: открой .env и замени DB_HOST=booking_db, REDIS_HOST=booking_cache
 ```
 
-2. Создайте и активируйте виртуальное окружение:
+Все настройки в одном файле. `docker compose` сам подхватит переменные для Postgres,
+Redis и приложения — дублирования нет.
+
+### 2. Запусти
+
+#### Docker (рекомендуется)
+
 ```bash
-python -m venv .venv
-source .venv/bin/activate  # Для Linux/macOS
-# .venv\Scripts\activate  # Для Windows
+docker compose up
+docker exec booking_back python -m alembic upgrade head
 ```
 
-3. Установите зависимости:
+- API напрямую: http://localhost:7777/docs
+- Через Nginx (rate limit 10 r/s): http://localhost:80/docs
+
+#### Локально
+
 ```bash
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-4. Создайте файл `.env` в корне проекта и заполните переменными:
-```env
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=postgres
-DB_PASS=postgres
-DB_NAME=booking
-
-REDIS_HOST=localhost
-REDIS_PORT=6379
-
-JWT_SECRET_KEY="09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
-JWT_ALGORITHM="HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-```
-
-5. Примените миграции базы данных:
-```bash
 alembic upgrade head
+uvicorn src.main:app --reload
 ```
 
-6. (Опционально) Заполните базу тестовыми данными:
+Фоновые задачи (отдельные терминалы):
+
+```bash
+celery -A src.tasks.celery_app worker -l INFO
+celery -A src.tasks.celery_app beat -l INFO
+```
+
+### 3. (Опционально) Заполни тестовыми данными
+
 ```bash
 python seed_data.py
 ```
 
-## Запуск приложения
+## API
 
-### Основной сервер FastAPI
-```bash
-uvicorn src.main:app --reload
+| Method | Path | Auth | Описание |
+|--------|------|------|----------|
+| POST | `/auth/register` | — | Регистрация (email + password) |
+| POST | `/auth/login` | — | Вход, JWT в HTTP-only cookie |
+| GET | `/auth/me` | Cookie | Текущий пользователь |
+| GET | `/auth/logout` | — | Очистка cookie |
+| GET | `/hotels` | — | Список отелей (cached 10s, фильтры: location, title, dates, пагинация) |
+| GET | `/hotels/{id}` | — | Отель |
+| POST | `/hotels` | — | Создать отель |
+| PATCH | `/hotels/{id}` | — | Частичное обновление |
+| DELETE | `/hotels/{id}` | — | Удалить |
+| GET | `/hotels/{id}/rooms` | — | Номера отеля с доступностью (query: date_from, date_to) |
+| POST | `/hotels/{id}/rooms` | — | Создать номер (с facilities_ids) |
+| GET | `/hotels/{id}/rooms/{rid}` | — | Номер с удобствами |
+| PATCH | `/hotels/{id}/rooms/{rid}` | — | Частичное обновление номера |
+| DELETE | `/hotels/{id}/rooms/{rid}` | — | Удалить номер |
+| GET | `/bookings` | — | Все бронирования |
+| GET | `/bookings/me` | Cookie | Мои бронирования |
+| POST | `/bookings` | Cookie | Создать бронь (room_id, date_from, date_to) |
+| GET | `/facilities` | — | Удобства (cached 10s) |
+| POST | `/facilities` | — | Создать удобство |
+| POST | `/images` | — | Загрузить изображение (multipart, ресайз в фоне) |
+
+## Architecture
+
 ```
-Документация API будет доступна: http://localhost:8000/docs
-
-### Воркер Celery (фоновые задачи)
-```bash
-celery -A src.tasks.celery_app worker --loglevel=info
+Request → API Layer (router) → Service Layer (business logic)
+                                     ↓
+                              Repository Layer (data access)
+                                     ↓
+                              ORM Models (SQLAlchemy)
+                                     ↓
+                              PostgreSQL (asyncpg)
 ```
 
-### Планировщик Celery Beat (периодические задачи)
-```bash
-celery -A src.tasks.celery_app beat --loglevel=info
+**Layered schemas (трёхуровневая валидация):**
+
+```
+*RequestAdd  — что шлёт клиент (например, BookingAddRequest: room_id, date_from, date_to)
+     ↓
+*Add         — что идёт в БД (BookingAdd: + user_id из JWT, + price из БД)
+     ↓
+*            — что возвращается клиенту (Booking: + id, from_attributes=True)
 ```
 
-## Обзор API
+Это гарантирует, что клиент не отправит `user_id` или `price`, и не получит `hashed_password`.
 
-### Аутентификация (`/auth`)
-| Метод | Эндпоинт | Описание |
-|-------|----------|----------|
-| POST | `/auth/register` | Регистрация пользователя |
-| POST | `/auth/login` | Вход (возвращает JWT в cookie) |
-| GET | `/auth/me` | Информация о текущем пользователе |
-| GET | `/auth/logout` | Выход (очистка cookie) |
+## Project Structure
 
-### Отели (`/hotels`)
-| Метод | Эндпоинт | Описание |
-|-------|----------|----------|
-| GET | `/hotels` | Список отелей (фильтрация по локации, названию, датам) |
-| GET | `/hotels/{hotel_id}` | Информация об отеле |
-| POST | `/hotels` | Создание отеля |
-| PUT | `/hotels/{hotel_id}` | Полное обновление отеля |
-| PATCH | `/hotels/{hotel_id}` | Частичное обновление отеля |
-| DELETE | `/hotels/{hotel_id}` | Удаление отеля |
+```
+src/
+├── main.py               # FastAPI app, lifespan (Redis, cache init)
+├── config.py             # Pydantic Settings из .env
+├── database.py           # async engine, sessionmaker, Base
+├── exceptions.py         # Domain + HTTP exceptions
+├── api/                  # Route handlers (auth, hotels, rooms, bookings, ...)
+├── services/             # Business logic (AuthService, HotelService, ...)
+├── repositories/         # Data access (CRUD, сложные запросы)
+│   └── mappers/          # ORM → Pydantic converters
+├── models/               # SQLAlchemy ORM models
+├── schemas/              # Pydantic validation schemas
+├── tasks/                # Celery config + task definitions
+├── connectors/           # Redis async connector
+├── migrations/           # Alembic migrations (7 files)
+└── static/images/        # Uploaded + resized images
+tests/
+├── unit_tests/           # Unit: JWT creation
+└── integration_tests/    # Integration: auth flow, hotels, bookings, facilities
+```
 
-### Номера (`/hotels/{hotel_id}/rooms`)
-| Метод | Эндпоинт | Описание |
-|-------|----------|----------|
-| GET | `/hotels/{hotel_id}/rooms` | Список номеров с доступностью (требуются date_from, date_to) |
-| GET | `/hotels/{hotel_id}/rooms/{room_id}` | Информация о номере с удобствами |
-| POST | `/hotels/{hotel_id}/rooms` | Создание номера (с facility_ids) |
-| PUT | `/hotels/{hotel_id}/rooms/{room_id}` | Полное обновление номера |
-| PATCH | `/hotels/{hotel_id}/rooms/{room_id}` | Частичное обновление номера |
-| DELETE | `/hotels/{hotel_id}/rooms/{room_id}` | Удаление номера |
+## Environment Variables
 
-### Бронирования (`/bookings`)
-| Метод | Эндпоинт | Описание |
-|-------|----------|----------|
-| GET | `/bookings` | Список всех бронирований |
-| GET | `/bookings/me` | Бронирования текущего пользователя |
-| POST | `/bookings` | Создание бронирования |
+Все переменные задаются в `.env`. Docker Compose использует их для Postgres и Redis
+через `${}` интерполяцию — не нужно дублировать значения.
 
-### Удобства (`/facilities`)
-| Метод | Эндпоинт | Описание |
-|-------|----------|----------|
-| GET | `/facilities` | Список всех удобств (кэшируется на 60с) |
-| POST | `/facilities` | Создание удобства |
+Шаблон: `.env.example` → копируешь в `.env`, правишь под себя.
 
-### Изображения (`/images`)
-| Метод | Эндпоинт | Описание |
-|-------|----------|----------|
-| POST | `/images` | Загрузка изображения (обрабатывается в фоне) |
+| Variable | Пример | Описание |
+|----------|--------|----------|
+| `DB_HOST` | `booking_db` / `localhost` | Хост Postgres (Docker / локально) |
+| `DB_PORT` | `5432` | Порт Postgres |
+| `DB_USER` | `postgres` | Пользователь Postgres |
+| `DB_PASS` | `postgres` | Пароль Postgres |
+| `DB_NAME` | `booking` | Имя БД |
+| `REDIS_HOST` | `booking_cache` / `localhost` | Хост Redis |
+| `REDIS_PORT` | `6379` | Порт Redis |
+| `JWT_SECRET_KEY` | `change-me` | Секрет для JWT (для прода — сгенерируй свой) |
+| `JWT_ALGORITHM` | `HS256` | Алгоритм JWT |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | `30` | Время жизни токена (мин) |
 
-## Переменные окружения (.env)
+## DB Schema
 
-| Переменная | Описание | Пример значения |
-|-----------|----------|-----------------|
-| DB_HOST | Хост базы данных | localhost |
-| DB_PORT | Порт базы данных | 5432 |
-| DB_USER | Пользователь БД | postgres |
-| DB_PASS | Пароль БД | postgres |
-| DB_NAME | Имя базы данных | booking |
-| REDIS_HOST | Хост Redis | localhost |
-| REDIS_PORT | Порт Redis | 6379 |
-| JWT_SECRET_KEY | Секретный ключ для JWT | "09d25e094faa6ca..." |
-| JWT_ALGORITHM | Алгоритм шифрования JWT | HS256 |
-| ACCESS_TOKEN_EXPIRE_MINUTES | Время жизни токена (минуты) | 30 |
+```
+users (id, email*, hashed_password)
+  └── bookings (id, user_id*, room_id*, date_from, date_to, price)
+hotels (id, title, location)
+  └── rooms (id, hotel_id*, title, description, price, quantity)
+        └── rooms_facilities (id, room_id*, facility_id*)
+facilities (id, title)
+```
 
-## Схема базы данных
-
-### Основные сущности:
-- **Users**: Пользователи (id, email, hashed_password)
-- **Hotels**: Отели (id, title, location)
-- **Rooms**: Номера (id, hotel_id, title, description, price, quantity)
-- **Bookings**: Бронирования (id, user_id, room_id, date_from, date_to, price, total_cost)
-- **Facilities**: Удобства (id, title)
-
-### Связи:
-- Отель → Номера: Один-ко-многим
-- Пользователь → Бронирования: Один-ко-многим
-- Номер → Бронирования: Один-ко-многим
-- Номера ↔ Удобства: Многие-ко-многим (через rooms_facilities)
-
-## Планы по развитию
-
-- Добавление тестов (pytest)
-- Ролевой доступ (RBAC) для администраторов
-- Возможность отмены бронирования
-- Интеграция с платежными системами
-- Расширение фильтрации и поиска
-- Документирование кода (docstrings)
+M2M: `rooms` ↔ `facilities` через `rooms_facilities`.
