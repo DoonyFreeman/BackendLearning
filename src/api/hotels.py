@@ -80,12 +80,6 @@ async def patch_hotel(
     return {"status": "ok"}
 
 
-@router.delete("/{hotel_id}")
-async def delete_hotel(hotel_id: int, db: DBDep):
-    await HotelService(db).delete_hotel(hotel_id)
-    return {"status": "ok"}
-
-
 @router.delete(
     "/{hotel_id}",
     summary="Удаление отеля",

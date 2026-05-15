@@ -41,6 +41,12 @@ services:
         condition: service_healthy
       booking_cache:
         condition: service_started
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   booking_celery_worker_service:
     container_name: 'booking_celery_worker'

@@ -3,7 +3,7 @@ from datetime import date
 from src.services.base import BaseService
 from src.exceptions import check_date_to_after_date_from
 from src.schemas.hotels import HotelAdd, HotelPATCH, Hotel
-from src.exceptions import ObjectNotFoundException, RoomNotFoundException, HotelNotFoundException
+from src.exceptions import ObjectNotFoundException, HotelNotFoundException
 
 
 class HotelService(BaseService):

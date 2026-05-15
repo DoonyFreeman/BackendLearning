@@ -1,6 +1,7 @@
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_swagger_ui_html
 import uvicorn
 
@@ -16,6 +17,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 logging.basicConfig(level=logging.DEBUG)
 
 
+# ruff: noqa: E402
 from src.api.auth import router as router_auth
 from src.api.hotels import router as router_hotels
 from src.api.rooms import router as router_rooms
@@ -39,6 +41,13 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(docs_url=None, lifespan=lifespan)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(router_auth)
 app.include_router(router_hotels)
@@ -46,6 +55,11 @@ app.include_router(router_rooms)
 app.include_router(router_facilities)
 app.include_router(router_bookings)
 app.include_router(router_images)
+
+
+@app.get("/health", tags=["Health"])
+async def health_check():
+    return {"status": "ok"}
 
 
 @app.get("/docs", include_in_schema=False)

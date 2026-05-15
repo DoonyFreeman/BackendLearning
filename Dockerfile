@@ -1,12 +1,16 @@
-FROM python:3.11.9
-
+FROM python:3.11.9-slim
 
 WORKDIR /app
 
-COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+ENV PYTHONPATH=/app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
 COPY . .
 
+RUN chmod +x docker-entrypoint.sh
 
-# CMD ["python", "src/main.py"]
-CMD alembic upgrade head; python src/main.py
+EXPOSE 8000
+
+ENTRYPOINT ["./docker-entrypoint.sh"]

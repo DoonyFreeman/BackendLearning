@@ -1,15 +1,13 @@
-import shutil
-from fastapi import UploadFile, BackgroundTasks
+from fastapi import UploadFile
 
 from src.services.base import BaseService
 from src.tasks.tasks import resize_image
 
 
 class ImagesService(BaseService):
-    def upload_image(self, file: UploadFile, background_tasks: BackgroundTasks):
+    def upload_image(self, file: UploadFile):
         image_path = f"src/static/images/{file.filename}"
-        with open(f"src/static/images/{file.filename}", "wb+") as new_file:
-            shutil.copyfileobj(file.file, new_file)
+        with open(image_path, "wb+") as new_file:
+            new_file.write(file.file.read())
 
-        # resize_image.delay(image_path)
-        background_tasks.add_task(resize_image, image_path)
+        resize_image.delay(image_path)
